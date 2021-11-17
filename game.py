@@ -45,7 +45,6 @@ class Grid:
             self.squares[num // self.dim_x][num % self.dim_x] = '0'
 
     def render(self):
-        print()
         for i, row in enumerate(self.squares):
             for j, slot in enumerate(row):
                 if j < len(row) - 1:
@@ -54,7 +53,6 @@ class Grid:
                     print(slot, end="")
             if i < len(self.squares) - 1:
                 print()
-        print()
         print()
 
 
@@ -68,30 +66,32 @@ pieces = [Piece('I', [[4, 14, 24, 34], [3, 4, 5, 6]]),
 
 piece, grid = None, None
 
-while not piece or not grid:
-    command = input("Input command: ")
-    if command == 'exit':
-        break
-    if command.startswith('piece:'):
-        piece = [piece for piece in pieces if piece.name == command.split()[1]].pop()
-    elif command.startswith('dimensions:'):
-        x, y = command.split()[1:]
-        grid = Grid(int(x), int(y))
-        grid.render()
-
-x = grid.get_width()
 while True:
-    grid.update(piece.get_current_rotation())
-    grid.render()
-    command = input("Input command: ")
+    if piece and grid:
+        grid.update(piece.get_current_rotation())
+        grid.render()
+        print()
+    command = input()
     if command == 'exit':
         break
-    if command == 'down':
-        pass
-    elif command == 'right':
-        piece.move_right(x)
-    elif command == 'left':
-        piece.move_left(x)
-    elif command == 'rotate':
-        piece.rotate()
-    piece.move_down(x)
+    if command in {'I', 'S', 'Z', 'L', 'J', 'O', 'T'}:
+        piece = [piece for piece in pieces if piece.name == command].pop()
+    elif len(command.split()) == 2:
+        x, y = command.split()
+        try:
+            grid = Grid(int(x), int(y))
+            grid.render()
+            print()
+            x = grid.get_width()
+        except ValueError:
+            continue
+    elif piece and grid:
+        if command == 'down':
+            pass
+        elif command == 'right':
+            piece.move_right(x)
+        elif command == 'left':
+            piece.move_left(x)
+        elif command == 'rotate':
+            piece.rotate()
+        piece.move_down(x)
