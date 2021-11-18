@@ -1,31 +1,51 @@
+from collections import deque
+
+
 class Piece:
     def __init__(self, name, rotations):
         self.name = name
-        self.rotations = rotations
-
-    def rotate(self):
-        self.rotations.append(self.rotations.pop(0))
-
-    def move_down(self, dim_x):
-        for row in self.rotations:
-            for i in range(len(row)):
-                row[i] += dim_x
-
-    def move_right(self, dim_x):
-        for row in self.rotations:
-            for i in range(len(row)):
-                row[i] = (row[i] + 1) % dim_x + (row[i] // dim_x) * dim_x
-
-    def move_left(self, dim_x):
-        for row in self.rotations:
-            for i in range(len(row)):
-                row[i] = (row[i] - 1) % dim_x + (row[i] // dim_x) * dim_x
+        self.rotations = deque(rotations)
+        self.frozen = False
 
     def get_current_rotation(self):
         return self.rotations[0]
 
     def get_num_rotations(self):
         return len(self.rotations)
+
+    def is_frozen(self):
+        return self.frozen
+
+    def rotate(self):
+        # for num in self.rotations[1]:
+        # check for out of bounds when rotate?
+        self.rotations.rotate(-1)
+
+    def move(self, step):
+        for row in self.rotations:
+            for i in range(len(row)):
+                row[i] += step
+
+    def check_left_collision(self, grid_width):
+        for num in self.rotations[0]:
+            if num % grid_width == 0:
+                return True
+        return False
+
+    def check_right_collision(self, grid_width):
+        for num in self.rotations[0]:
+            if num % grid_width == grid_width - 1:
+                return True
+        return False
+
+    def check_floor_collision(self, grid_width, grid_height):
+        for num in self.rotations[0]:
+            if num // grid_width == grid_height - 1:
+                return True
+        return False
+
+    def freeze(self):
+        self.frozen = True
 
 
 class Grid:
@@ -37,11 +57,12 @@ class Grid:
     def get_width(self):
         return self.dim_x
 
+    def get_height(self):
+        return self.dim_y
+
     def update(self, rotation):
         self.squares = [["-" for _ in range(self.dim_x)] for _ in range(self.dim_y)]
         for num in rotation:
-            if num // self.dim_x >= self.dim_y:
-                continue
             self.squares[num // self.dim_x][num % self.dim_x] = '0'
 
     def render(self):
@@ -53,7 +74,7 @@ class Grid:
                     print(slot, end="")
             if i < len(self.squares) - 1:
                 print()
-        print()
+        print("\n")
 
 
 pieces = [Piece('I', [[4, 14, 24, 34], [3, 4, 5, 6]]),
@@ -70,7 +91,6 @@ while True:
     if piece and grid:
         grid.update(piece.get_current_rotation())
         grid.render()
-        print()
     command = input()
     if command == 'exit':
         break
@@ -81,17 +101,23 @@ while True:
         try:
             grid = Grid(int(x), int(y))
             grid.render()
-            print()
             x = grid.get_width()
+            y = grid.get_height()
         except ValueError:
             continue
-    elif piece and grid:
+    elif grid and not piece.is_frozen():
         if command == 'down':
             pass
         elif command == 'right':
-            piece.move_right(x)
+            if not piece.check_right_collision(x):
+                piece.move(1)
         elif command == 'left':
-            piece.move_left(x)
+            if not piece.check_left_collision(x):
+                piece.move(-1)
         elif command == 'rotate':
             piece.rotate()
-        piece.move_down(x)
+        else:
+            continue
+        piece.move(x)
+        if piece.check_floor_collision(x, y):
+            piece.freeze()
