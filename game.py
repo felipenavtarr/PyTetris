@@ -27,22 +27,13 @@ class Piece:
                 row[i] += step
 
     def check_left_collision(self, grid_width):
-        for num in self.rotations[0]:
-            if num % grid_width == 0:
-                return True
-        return False
+        return any([num % grid_width == 0 for num in self.rotations[0]])
 
     def check_right_collision(self, grid_width):
-        for num in self.rotations[0]:
-            if num % grid_width == grid_width - 1:
-                return True
-        return False
+        return any([num % grid_width == grid_width - 1 for num in self.rotations[0]])
 
     def check_floor_collision(self, grid_width, grid_height):
-        for num in self.rotations[0]:
-            if num // grid_width == grid_height - 1:
-                return True
-        return False
+        return any([num // grid_width == grid_height - 1 for num in self.rotations[0]])
 
     def freeze(self):
         self.frozen = True
